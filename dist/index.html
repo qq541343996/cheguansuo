@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./build/tracking-min.js"></script>
+    <script src="./build/data/face-min.js"></script>
+    <script language="javascript" src="./LodopFuncs.js"></script>
+    <title>交管智慧处理终端</title>
+    <style>
+        body {
+            background: url("./img/background.png") no-repeat #041623;
+            background-size:100% 100%; 
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            font-family: Georgia, times new roman, Times, serif;
+            font-size: 14px;
+        }
+
+        .wrapper {
+            width: 100%;
+            margin: 0 auto;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root" class="wrapper">
+    </div>
+    <script src="./index_bundle.js"></script>
+    <script>
+        function requestFullScreen(element) {
+            // 判断各种浏览器，找到正确的方法
+            var requestMethod = element.requestFullScreen || //W3C
+                element.webkitRequestFullScreen || //FireFox
+                element.mozRequestFullScreen || //Chrome等
+                element.msRequestFullScreen; //IE11
+            if (requestMethod) {
+                requestMethod.call(element);
+            } else if (typeof window.ActiveXObject !== "undefined") { //for Internet Explorer
+                var wscript = new ActiveXObject("WScript.Shell");
+                if (wscript !== null) {
+                    wscript.SendKeys("{F11}");
+                }
+            }
+        }
+        requestFullScreen(document.documentElement);
+    </script>
+</body>
+
+</html>
