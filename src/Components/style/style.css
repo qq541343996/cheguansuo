@@ -38,6 +38,19 @@
     flex-direction: column;
     width: 100%;
     height:450px;
+    /* border: 5px solid #E3C48B; */
+    border-radius: 50px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', Courier, monospace
+}
+.re-face-card{
+    margin-top:100px;
+    flex-direction: column;
+    width: 100%;
+    height:450px;
     border: 5px solid #E3C48B;
     border-radius: 50px;
     text-align: center;
@@ -86,4 +99,32 @@
     font-weight: 600;
     border-radius: 5px;
     font-size: 28px;
+    background: #ffffff;
+    color: black
 }
+.keyboard2{
+    margin-top:10px;
+    width: 1000px;
+    height: 300px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    display: flex;
+}
+.keyboard2 p{
+    width: 8%;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    border: 1px solid black;
+    font-weight: 600;
+    border-radius: 5px;
+    font-size: 28px;
+    background: #ffffff;
+    color: black
+}
+.card{
+    width: 430px;
+    height: 250px;
+    line-height: 200px;
+}
+

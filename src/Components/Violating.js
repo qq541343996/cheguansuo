@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { message, Button, Table, Divider, Tag, Pagination } from 'antd';
+import { message, Table, Divider, Tag, Pagination,Menu,Dropdown,Button,Icon } from 'antd';
 import { Link } from 'react-router-dom';
 import {HttpClient, HttpClientget, HttpClientpost} from '../util/AxiosUtils';
 
@@ -16,11 +16,13 @@ class Violating extends Component {
             msg:'',
             score:'',
             carNumber:"",
-            driveNumber:'5002320194984547234',
-            serialNumber:''
+            disposDriveNumber:'5002320194984547234',
+            serialNumber:'',
+            carNumber2:'',
+            abbreviation:"渝",
+            hpzlName:"点击此处选取车辆类型"
         };
     }
-    
 connect=()=> {	
 	var ret = CertCtl.connect();
     ret = this.JStrToObj(ret);	
@@ -30,6 +32,7 @@ connect=()=> {
 readCert1=()=> {
     // clearInterval(this.time)
     // this.select()
+    const _that = this;
 	var ret = CertCtl.readCert();
     ret = this.JStrToObj(ret);
     console.log("info",ret)
@@ -46,11 +49,21 @@ readCert1=()=> {
             certNumber:ret.resultContent.certNumber,
             // img1:ret.resultContent.identityPic
         },()=>{
+            //发送身份证号
+            // HttpClientpost("http://39.106.29.113:6789",{"code":"86005","token":"0fa16a943ab6679ccd052814a6ada0d6","param":{"jszh":this.state.certNumber}}
+            // ).then((result) => {
+            //     console.log('result',result)
+            //     _that.setState({
+            //         data:result
+            //     })
+            // }).catch((err) => {
+            //     console.log(err)
+            // });
             this.select()
         })
     }
 }
-//读交款人
+//读处理人
 readCert2=(record)=> {
     // clearInterval(this.time)
     // this.select()
@@ -64,7 +77,8 @@ readCert2=(record)=> {
         clearInterval(this.time)
         message.success("识别成功");
         _that.setState({
-            img1:ret.resultContent.identityPic
+            img1:ret.resultContent.identityPic,
+            disposName:ret.resultContent.partyName,
         },()=>{
             document.getElementById("img1").onload=()=>{
                 var canvas = document.getElementById("myCanvas");
@@ -81,17 +95,6 @@ readCert2=(record)=> {
             }
         })
         
-
-        // this.setState({
-        //     name:ret.resultContent.partyName,
-        //     gender:ret.resultContent.gender == 1?"男":"女",
-        //     nation:ret.resultContent.nation,
-        //     bornDay:ret.resultContent.bornDay,
-        //     certNumber:ret.resultContent.certNumber,
-        //     img1:ret.resultContent.identityPic
-        // },()=>{
-        //     this.camera()
-        // })
     }
 }
 
@@ -109,16 +112,10 @@ JStrToObj=(str)=>{
             }, 3000)
         })
     }
-//处理/交款人身份证
+//处理人身份证/交款
     dealHandle2(record) {
         // this.connect()
-        if(record.status==1){
-            this.setState({
-                dealHandle: "dispose",
-                score:record.score,
-                carNumber:record.carNumber
-            })
-        }else{
+        if(record.clbj==1){
             this.setState({
                 dealHandle: "card2"
             }, () => {
@@ -126,6 +123,14 @@ JStrToObj=(str)=>{
                     this.readCert2(record)                
                 }, 3000)
             })
+
+        }else{
+            this.setState({
+                    dealHandle: "confirmInfo",
+                    score:record.score,
+                    carNumber:record.carNumber,
+                    money:record.money
+                })
         }
        
 }
@@ -143,28 +148,13 @@ JStrToObj=(str)=>{
         this.setState({
             dealHandle: "table",
         },()=>{
-            
-            // document.getElementById("img1").onload=()=>{
-            //     var canvas = document.getElementById("myCanvas");
-            //     var ctx = canvas.getContext("2d");
-            //     var img=document.getElementById("img1");
-                
-            //     ctx.drawImage(img,0,0,300,300);
-            //     var base64 = canvas.toDataURL('image/jpeg',4);
-            //     _that.setState({
-            //         img3:base64.replace("data:image/jpeg;base64,","")
-            //     })
-            // }
-            
+            console.log(this.state.carNumber2)
         })
-         
-        
-        
     }
 
          
 //调用摄像头
-camera(record){
+camera=(record)=>{
     console.log(record)
     const _that =this
     this.setState({
@@ -227,10 +217,7 @@ camera(record){
       tracker.setInitialScale(4);
       tracker.setStepSize(2);
       tracker.setEdgesDensity(0.1);
-
-      tracking.track('#video', tracker, { camera: true });
-
-
+      const trackerTask = tracking.track('#video', tracker, { camera: true });
       tracker.on('track', function(event) {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(video,0,0,500,400);
@@ -241,7 +228,7 @@ camera(record){
           context.font = '11px Helvetica';
           context.fillStyle = "#fff";
         if(_that.state.takePhoto){
-            if(rect.x>60&&rect.x<200&&rect.y>50&&rect.y<170){
+            if(rect.x>40&&rect.x<220&&rect.y>40&&rect.y<200){
                 // console.log(canvas.toDataURL("image/jpeg").replace("data:image/jpeg;base64,",""))
                 const faceImg = canvas.toDataURL("image/jpeg").replace("data:image/jpeg;base64,","");
                 _that.setState({
@@ -251,16 +238,17 @@ camera(record){
                     then((result) => {
                         console.log('result',result)
                         if(result.score > 60){
-                            message.success("识别成功.");
+                            message.success("人脸识别成功.");
+                            trackerTask.stop();
                             console.log("识别成功.")
                             setTimeout(()=>{ 
                                 _that.setState({
                                 takePhoto:false,
-                                dealHandle: "confirmInfo"
-                            })},2000)
+                                dealHandle: "dispose"
+                            })},1000)
                            
                         }else{
-                            message.success("识别失败.");
+                            message.success("人脸识别失败.");
                             console.log("识别失败.")
                             setTimeout(()=>{
                                 _that.setState({
@@ -288,15 +276,8 @@ camera(record){
         this.setState({
             dealHandle: "confirmInfo"
         }, () => {
-          
+           
         })
-        // setTimeout(() => {
-        //     message.success("识别成功.");
-        //      this.setState({
-        //          dealHandle: "payVio"
-        //      })
-        //  }, 2300)
-        
     }
     //打印
     myPrint=()=> {		       
@@ -305,7 +286,7 @@ camera(record){
     };
     CreatePrintPage=()=> {       
         LODOP=getLodop();
-		LODOP.SET_PRINT_STYLE("FontSize",11);       
+		LODOP.SET_PRINT_STYLE("FontSize",9);       
 		LODOP.ADD_PRINT_TEXT(0,100,100,25,"缴凭证据");       
 		LODOP.SET_PRINT_STYLEA(2,"FontName","隶书");       
 		LODOP.SET_PRINT_STYLEA(2,"FontSize",9);		       
@@ -325,6 +306,8 @@ camera(record){
     onMoney=()=>{
         this.setState({
             dealHandle: "money"
+        },()=>{
+            
         })
     }
     //完成缴费
@@ -339,7 +322,7 @@ camera(record){
             dealHandle: "serialNumber"
         })
     }
-    //违章编号
+    //输入违章编号
     onInput(data){
        
         if(data == -1){
@@ -362,8 +345,79 @@ camera(record){
         },()=>{
            
         })
+    }
+    //输入车牌号码
+    onCarNumber(data){
+        if(data == -1){
+            const carNumber2 = this.state.carNumber2.substring(0, this.state.carNumber2.length - 1);  
+            this.setState({
+                 carNumber2:carNumber2
+             })
+             
+         }else{
+             const carNumber2 = this.state.carNumber2+data
+             this.setState({
+                 carNumber2:carNumber2
+             })
+         }
+         return false;
+    }
+    onCarChange=(e)=>{
+        this.setState({
+            carNumber2:e.target.value
+        },()=>{
+           
+        })
+    }
+    //分类选择
+    classify=()=>{
+        this.setState({
+            dealHandle: "classify"
+        })
+    }
+    //输入车辆信息
+    readCar=()=>{
+        this.setState({
+            dealHandle: "carInfo"
+        })
+    }
+    //手动输入编号
+    pay1=()=>{
+        this.setState({
+            dealHandle: "pay1"
+        })
+    }
+    //扫码输入编号
+    pay2=()=>{
+        
+        this.setState({
+            dealHandle: "pay2"
+        },()=>{
+            this.textInput.focus();
+        })
+    }
+    //回主页
+    onClick(){
+        //window.location.href = "dist/index.html"
+        window.location.href = "/"
+    }
+    //打印条形码并且返回表单页
+    backViolating(){
+        this.setState({
+            dealHandle:"table",
+            img1:"",
+            takePhoto:true,
+        })
 
-       
+        // location.reload()
+    }
+    //选择车辆类型
+    selectCar(data,name){
+        console.log(data)
+        this.setState({
+            hpzlName:name,
+            hpzl:data
+        })
     }
     seletHandle = () => {
         const columns = [{
@@ -372,116 +426,114 @@ camera(record){
             key: 'key',
             render: text => <a href="javascript:;">{text}</a>,
         }, {
-            title: '违章信息',
-            dataIndex: 'msg',
-            key: 'msg',
+            title: '违法内容',
+            dataIndex: 'wfnr',
+            key: 'wfnr',
         }, {
             title: '车牌号',
-            dataIndex: 'carNumber',
-            key: 'carNumber',
+            dataIndex: 'hphm',
+            key: 'hphm',
         }, {
-            title: '违章地点',
-            dataIndex: 'address',
-            key: 'address',
+            title: '违法地址',
+            dataIndex: 'wfdz',
+            key: 'wfdz',
         }, {
             title: '记分',
             dataIndex: 'score',
             key: 'score',
         }, {
-            title: '罚款',
-            dataIndex: 'money',
-            key: 'money',
+            title: '罚款金额',
+            dataIndex: 'fkje',
+            key: 'fkje',
         }, {
-            title: '违章时间',
-            dataIndex: 'time',
-            key: 'time',
+            title: '违法时间',
+            dataIndex: 'wfsj',
+            key: 'wfsj',
         },  {
-            title: '状态',
-            dataIndex: 'status',
-            key: 'status',
+            title: '处理标记',
+            dataIndex: 'clbj',
+            key: 'clbj',
             render:(text, record)=>(
-                <span>{parseInt(record.status)==1 ? "未处理":"已处理"}</span>
+                <span>{parseInt(record.clbj)==1 ? "未处理":"已处理"}</span>
             )
         },  {
             title: '操作',
             key: 'action',
             render: (text, record) => (
               <span>
-              {parseInt(record.status)==1 ? <Tag color="blue">处理</Tag>:<Tag color="blue">交款</Tag>}
+              {parseInt(record.clbj)==1 ? <Tag color="blue">处理</Tag>:<Tag color="blue">交款</Tag>}
               </span>
             ),
           }];
 
         const data = [{
+            cljdsbh:"123435345",
             key: '1',
-            msg: '闯红灯',
-            carNumber:'渝A123456',
+            wfnr: '闯红灯',
+            hphm:'渝A123456',
             num: 32,
-            time: '2018/9/30 12:00:00',
-            money:200,
+            wfsj: '2018/9/30 12:00:00',
+            fkje:200,
             score:'3',
-            address:'桃源路路口',
-            status:'0'
+            wfdz:'桃源路路口',
+            clbj:'0'
         }, {
             key: '2',
-            msg: '违章停车',
-            carNumber:'渝A123456',
+            wfnr: '违章停车',
+            hphm:'渝A123456',
             num: 42,
-            time: '2018/9/30 12:00:00',
-            money:300,
+            wfsj: '2018/9/30 12:00:00',
+            fkje:300,
             score:'3',
-            address:'直港大道',
-            status:'1'
+            wfdz:'直港大道',
+            clbj:'1'
         }, {
             key: '3',
-            msg: '违规变道',
-            carNumber:'渝A123456',
+            wfnr: '违规变道',
+            hphm:'渝A123456',
             num: 52,
-            time: '2018/9/30 12:00:00',
-            money:400,
+            wfsj: '2018/9/30 12:00:00',
+            fkje:400,
             score:'3',
-            address:'嘉华大桥',
-            status:'1'
+            wfdz:'嘉华大桥',
+            clbj:'1'
         }, {
             key: '4',
-            msg: '违规变道',
-            carNumber:'渝A123456',
+            wfnr: '违规变道',
+            hphm:'渝A123456',
             num: 65,
-            time: '2018/9/30 12:00:00',
-            money:400,
+            wfsj: '2018/9/30 12:00:00',
+            fkje:400,
             score:'3',
-            address:'桃源路路口',
-            status:'1'
-        }, {
-            key: '5',
-            msg: '违规变道',
-            carNumber:'渝A123456',
-            num: 79,
-            time: '2018/9/30 12:00:00',
-            money:400,
-            score:'3',
-            address:'桃源路路口',
-            status:'1'
+            wfdz:'桃源路路口',
+            clbj:'1'
         }];
 
 
         const child = [];
         const { dealHandle } = this.state;
+        const menu = (
+            <Menu>
+              <Menu.Item key="1" onClick={()=> this.selectCar("02","小型汽车")}>小型汽车</Menu.Item>
+              <Menu.Item key="2" onClick={()=> this.selectCar("01","大型汽车")}>大型汽车</Menu.Item>
+              <Menu.Item key="3" onClick={()=> this.selectCar("13","农用运输车类")}>农用运输车类</Menu.Item>
+            </Menu>
+          );
         switch (dealHandle) {
             case "card1":
-                child.push(<div key={1} className="re-face">
+                child.push(<div key={1} className="re-face-card">
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000" }}>请放入车主身份证</span>
                 </div>);
                 break;
             case "card2":
-                child.push(<div key={1} className="re-face">
+                child.push(<div key={1} className="re-face-card">
                     <img style={{width:"300px",height:"300px",opacity:'0',position:'absolute'}} src={"data:image/jpeg;base64," + this.state.img1} alt="" id="img1"/>
                     <canvas id="myCanvas" width="300px" height="300px" style={{opacity:'0',position:'absolute'}}></canvas>
-                    <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000" }}>请放入交款人身份证</span>
+                    <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000" }}>请放入处理人身份证</span>
                 </div>);
                 break;
             case "table":
-                child.push(<div key={1} className="re-face">
+                child.push(<div key={1} className="re-face-card">
                     <Table columns={columns} dataSource={data} pagination={false} 
                     onRow={(record) => {
                         return {
@@ -491,85 +543,155 @@ camera(record){
                       <Pagination defaultCurrent={1} defaultPageSize={5} total={5} style={{marginTop:'10px'}}/>
                 </div>);
                 break;
-            case "pay":
-                child.push(<div key={1} className="re-face">
-                    <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:'5px' }}>请输入违章编号</span>
+            case "pay1":
+                child.push(<div key={1} className="re-face-card">
+                    <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:'5px',color:"black" }}>请输入违章编号</span>
                     {/* <div style={{width:"300px",height:"60px",background:"white",fontSize:'24px',fontWeight:'600',lineHeight:'40px'}}>{this.state.serialNumber}</div> */}
-                    <input type="text" onChange={this.onChange} placeholder={"扫码时请先点击该框"} value={this.state.serialNumber}/>
+                    <input type="text" onChange={this.onChange} value={this.state.serialNumber}/>
                     <div className="keyboard">
                         <p onClick={()=>{this.onInput(1)}}>1</p><p onClick={()=>{this.onInput(2)}}>2</p><p onClick={()=>{this.onInput(3)}}>3</p>
                         <p onClick={()=>{this.onInput(4)}}>4</p><p onClick={()=>{this.onInput(5)}}>5</p><p onClick={()=>{this.onInput(6)}}>6</p>
                         <p onClick={()=>{this.onInput(7)}}>7</p><p onClick={()=>{this.onInput(8)}}>8</p><p onClick={()=>{this.onInput(9)}}>9</p>
-                        <p>.</p><p onClick={()=>{this.onInput(0)}}>0</p><p onClick={()=>{this.onInput(-1)}}>退格</p>
+                        <p onClick={()=>{this.onInput("X")}}>X</p><p onClick={()=>{this.onInput(0)}}>0</p><p onClick={()=>{this.onInput(-1)}}>退格</p>
                     </div>
-                    <div ref='digitalKeyboard'></div>                    
+                                   
                     <span onClick={() => this.CompleteHandle()} style={{ fontSize: "16px", fontWeight: 600, color: "#000000", marginTop: "10px", borderRadius: "10px", padding: "12px 40px", backgroundColor: "gainsboro",cursor:'pointer' }}>完成</span>
                 </div>);
                 break;
-            case "face":
+            case "pay2":
+                child.push(<div key={1} className="re-face-card">
+                    <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:'5px',color:"black"  }}>请在右下方扫描输入</span>
+                    {/* <div style={{width:"300px",height:"60px",background:"white",fontSize:'24px',fontWeight:'600',lineHeight:'40px'}}>{this.state.serialNumber}</div> */}
+                    <input type="text" onChange={this.onChange} value={this.state.serialNumber} autoFocus="autofocus" ref={(input) => { this.textInput = input; }}/>
+                    <span onClick={() => this.CompleteHandle()} style={{ fontSize: "16px", fontWeight: 600, color: "#000000", marginTop: "10px", borderRadius: "10px", padding: "12px 40px", backgroundColor: "white",cursor:'pointer' }}>完成</span>
+                </div>);
+                break;
+            case "pay":
                 child.push(<div key={1} className="re-face">
-                    <p style={{ fontSize: "24px", fontWeight: 600, color: "#000000" }}>正在进行人脸识别.</p>
+                <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" ,display:"flex"}}>
+                    <div onClick={() => this.pay1()} style={{marginRight:"200px"}} className="card">
+                    <img src={require("../style/images/手动输入违章编号.png")} width="430px" height="250px"/>
+                    </div>
+                    <div onClick={() => this.pay2()} className="card">
+                    <img src={require("../style/images/扫码输入违章编号.png")} width="430px" height="250px"/>
+                    </div>
+                    </span>
+                </div>);
+                break;
+            case "face":
+                child.push(<div key={1} className="re-face-card">
+                    <p style={{ fontSize: "24px", fontWeight: 600, color: "#000000" ,color:"black" }}>正在进行人脸识别.</p>
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000" }}>
                         <img src={require("../style/images/bg0.png")} style={{width:"500px",height:"400px",position:'absolute',zIndex:10}}/>
                         <video id="video" width="500px" height="400px" style={{opacity:0,position:'absolute'}} ></video>
                         <canvas id="canvas" width="500px" height="400px" ></canvas>
-                        
                     </span>
                 </div>);
                 break;
             case "payVio":
-                child.push(<div key={1} className="re-face">
-                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"50px" }}>完成缴费.</span>
+                child.push(<div key={1} className="re-face-card">
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"50px",color:"white"  }}>完成缴费.</span>
                     <button onClick={this.myPrint} style={{fontSize:"24px"}}>打印凭证</button>
                 </div>);
                 break;
             case "confirmInfo":
-                child.push(<div key={1} className="re-face">
-                    <p style={{fontSize: "24px", fontWeight: 600, color: "#000000",marginTop:'5px'}}>违法信息确认</p>
+                child.push(<div key={1} className="re-face-card">
+                    <p style={{fontSize: "24px", fontWeight: 600, color: "#000000",marginTop:'5px',color:"black" }}>违法信息确认</p>
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:"px",textAlign:"left"}}>
-                        <p style={{marginTop:'5px'}}>处理人驾驶证号：{this.state.driveNumber}</p>
-                        <p style={{marginTop:'5px'}}>当事人：{this.state.name}</p>
-                        <p style={{marginTop:'5px'}}>车牌号码：{this.state.carNumber}</p>
-                        <p style={{marginTop:'5px'}}>罚款金额：{this.state.money}</p>
-                        <p style={{marginTop:'5px'}}>滞纳金：0</p>
+                        <p style={{marginTop:'5px',color:"black" }}>处理决定书编号：564615657537186</p>
+                        <p style={{marginTop:'5px',color:"black" }}>当事人：{this.state.name}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.carNumber}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>罚款金额（元）：{this.state.money}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>滞纳金（元）：0</p>
                     </span>
                     <button onClick={()=>this.onMoney()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
                 </div>);
                 break;
             case "dispose":
-                child.push(<div key={1} className="re-face">
-                    <p style={{fontSize: "24px", fontWeight: 600, color: "#000000",marginTop:'5px'}}>违法信息确认</p>
+                child.push(<div key={1} className="re-face-card">
+                    <p style={{fontSize: "24px", fontWeight: 600, color: "#000000",marginTop:'5px',color:"black" }}>违法信息确认</p>
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:"px",textAlign:"left"}}>
-                        <p style={{marginTop:'5px'}}>处理人驾驶证号：{this.state.driveNumber}</p>
-                        <p style={{marginTop:'5px'}}>处理人：{this.state.name}</p>
-                        <p style={{marginTop:'5px'}}>车牌号码：{this.state.carNumber}</p>
-                        <p style={{marginTop:'5px'}}>违章记分：{this.state.score}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>处理人驾驶证号：{this.state.disposDriveNumber}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>处理人：{this.state.disposName}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.carNumber}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>违章记分：{this.state.score}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>罚款金额：{this.state.money}</p>
                    </span>
                     <button onClick={()=>this.dispose()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
                 </div>);
                 break;
             case "serialNumber":
-                child.push(<div key={1} className="re-face">
+                child.push(<div key={1} className="re-face-card">
                     <p style={{fontSize: "24px", fontWeight: 600, color: "red",marginTop:'5px'}}>违法处理成功</p>
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:"px",textAlign:"left"}}>
-                        <p style={{marginTop:'5px'}}>处理决定书编号：564615657537186</p>
+                        <p style={{marginTop:'5px',color:"black" }}>处理决定书编号：564615657537186</p>
                    </span>
-                    <button onClick={()=>this.select()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
+                    <button onClick={()=>this.backViolating()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
                 </div>);
                 break;
             case "money":
-                child.push(<div key={1} className="re-face">
-                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" }}>
+                child.push(<div key={1} className="re-face-card">
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" ,color:"black" }}>
                       请输入密码
                     </span>
                     <input type="password"/>
                     <button onClick={()=>this.onpayVio()} style={{fontSize:"24px",marginTop:"20px"}}>确认</button>
                 </div>);
                 break;
+            case "classify":
+                child.push(<div key={1} className="re-face">
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" ,display:"flex"}}>
+                      <div onClick={() => this.dealHandle1()} style={{marginRight:"200px"}} className="card">
+                      <img src={require("../style/images/读取车主身份证.png")} width="430px" height="250px"/>
+                      </div>
+                      <div onClick={() => this.readCar()} className="card">
+                      <img src={require("../style/images/读取机动车信息.png")} width="430px" height="250px"/>
+                      </div>
+                    </span>
+                </div>);
+                break;
+            case "carInfo": 
+                child.push(<div key={1} className="re-face-card" style={{}}>
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" }}>
+                      <div  style={{color:"black"}}>请输入车辆信息</div>
+                    </span>
+                    <div><span style={{fontSize:"24px",fontWeight:600}} style={{fontSize:"18px",color:"black"}}>车牌号码：
+                    
+                    </span><span style={{color:"red",fontSize:"24px",fontWeight:600}}>
+                    {/* <Dropdown overlay={menu} trigger={["click"]}>
+                        <Button style={{height:"50px",fontSize:"20px"}}>
+                            {this.state.abbreviation}<Icon type="down" />
+                        </Button>
+                    </Dropdown> */}
+                    渝
+                    </span>
+                    <input type="text" style={{marginLeft:"5px",color:"red"}} onChange={this.onCarChange} value={this.state.carNumber2}/></div>
+                    <div>
+                            <span style={{fontSize:"24px",fontWeight:600}} style={{fontSize:"18px",color:"black"}}>
+                                车辆类型：
+                            </span>
+                            <span style={{color:"red",fontSize:"24px",fontWeight:600}}>
+                            <Dropdown overlay={menu} trigger={["click"]}>
+                                <Button style={{ marginLeft: 8 ,marginTop: 10 ,width:"308px",height:"50px",fontSize:"20px"}}>
+                                    {this.state.hpzlName}<Icon type="down" />
+                                </Button>
+                            </Dropdown>
+                            </span>
+                        </div>
+                    <div className="keyboard2">
+                        <p onClick={()=>{this.onCarNumber(0)}}>0</p><p onClick={()=>{this.onCarNumber(1)}}>1</p><p onClick={()=>{this.onCarNumber(2)}}>2</p><p onClick={()=>{this.onCarNumber(3)}}>3</p><p onClick={()=>{this.onCarNumber(4)}}>4</p><p onClick={()=>{this.onCarNumber(5)}}>5</p><p onClick={()=>{this.onCarNumber(6)}}>6</p><p onClick={()=>{this.onCarNumber(7)}}>7</p><p onClick={()=>{this.onCarNumber(8)}}>8</p><p onClick={()=>{this.onCarNumber(9)}}>9</p>
+                        <p onClick={()=>{this.onCarNumber("A")}}>A</p><p onClick={()=>{this.onCarNumber("B")}}>B</p><p onClick={()=>{this.onCarNumber("C")}}>C</p><p onClick={()=>{this.onCarNumber("D")}}>D</p><p onClick={()=>{this.onCarNumber("E")}}>E</p><p onClick={()=>{this.onCarNumber("F")}}>F</p><p onClick={()=>{this.onCarNumber("G")}}>G</p><p onClick={()=>{this.onCarNumber("H")}}>H</p><p onClick={()=>{this.onCarNumber("I")}}>I</p><p onClick={()=>{this.onCarNumber("J")}}>J</p>
+                        <p onClick={()=>{this.onCarNumber("K")}}>K</p><p onClick={()=>{this.onCarNumber("L")}}>L</p><p onClick={()=>{this.onCarNumber("M")}}>M</p><p onClick={()=>{this.onCarNumber("N")}}>N</p><p onClick={()=>{this.onCarNumber("O")}}>O</p><p onClick={()=>{this.onCarNumber("P")}}>P</p><p onClick={()=>{this.onCarNumber("Q")}}>Q</p><p onClick={()=>{this.onCarNumber("R")}}>R</p><p onClick={()=>{this.onCarNumber("S")}}>S</p><p onClick={()=>{this.onCarNumber("T")}}>T</p>
+                        <p onClick={()=>{this.onCarNumber("U")}}>U</p><p onClick={()=>{this.onCarNumber("V")}}>V</p><p onClick={()=>{this.onCarNumber("W")}}>W</p><p onClick={()=>{this.onCarNumber("Y")}}>Y</p><p onClick={()=>{this.onCarNumber("Z")}}>Z</p>
+                        <p onClick={()=>{this.onCarNumber(-1)}}>退格</p>
+                    </div>
+                    <button onClick={()=>this.select()} style={{fontSize:"24px",marginTop:"20px"}}>确认</button>
+                </div>);
+                break;
             default:
                 child.push(
                     <div key={1} className="sc">
-                        <div className="item" onClick={() => this.dealHandle1()}>
+                        <div className="item" onClick={() => this.classify()}>
                         <img src={require("../style/images/违法处理.png")} width="160px" height="160px"/>
                             {/* 违章处理 */}
                     </div>
@@ -584,15 +706,16 @@ camera(record){
     }
     render() {
         const { dealHandle } = this.state;
-
         return (
             <div className="container violating">
                 <object type="application/cert-reader"  id="CertCtl" width='0' height='0'> </object>  
                 {this.seletHandle()}
-                <Link to="/" text="首页" key={1}>
-                    <div className="btn">返回</div>
-                </Link>
                 
+                    <div className="btn" onClick={this.onClick}>返回</div>
+                
+                    {/* <Link to="/" text="首页" key={1}>
+                    <div className="btn">返回</div>
+                </Link> */}
             </div>
         )
     }

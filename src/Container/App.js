@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Router, Switch, Route, Link, BrowserRouter } from 'react-router-dom';
+import { Router, Switch, Route, Link, BrowserRouter, HashRouter} from 'react-router-dom';
 import { createBrowserHistory } from 'history'
 const history = createBrowserHistory()
 import { Motor, Home, Driver, Violating } from '../Components'
@@ -42,10 +42,14 @@ class App extends Component {
         return (
             <div className="app">
                 <div className="header">
+                    
                     <h1>
-                    交管智慧处理终端
-                    {this.changeTime()}
-                    <div className="backHome" onClick={this.onClick.bind(this)}>返回主页</div>
+                        <div>
+                        <img src={require("../style/images/logo.jpg")} width="75px" height="75px" style={{marginRight:"10px"}}/>
+                        交管智慧处理终端
+                        </div>
+                        {this.changeTime()}
+                        <div className="backHome" onClick={this.onClick.bind(this)}>返回主页</div>
                     </h1>
                     {/* <div id="start"><img src={require("../style/images/MS WINDOWS 7.A.png")} width="64" /></div> */}
                    
@@ -54,7 +58,7 @@ class App extends Component {
                     <Main />
                 </BrowserRouter >
                 <div className="footer">
-                 <h3>版权所属：重庆赛丰基业科技公司</h3>
+                 <h3 style={{color:"black"}}>版权所属：重庆赛丰基业科技公司</h3>
                 </div>
             </div>
         )

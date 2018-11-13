@@ -83,6 +83,7 @@ acronym {
 body {
     /* background: url("./images/bluebg.png") #041623; */
     background: url("./images/background3.png") no-repeat #041623;
+    /* background:#141452; */
     background-size:100% 100%; 
     background-attachment: fixed;
     margin: 0;
@@ -107,8 +108,8 @@ h1 {
 }
 
 .header h1 {
-    color: #57CFED;
-    line-height: 70px;
+    color: #141452;
+    line-height: 95px;
     margin: 0 90px;
     font-family: Arial, sans-serif;
     font-size: 38px;
@@ -154,10 +155,11 @@ a:active {
 .header {
     width: 100%;
     margin: 0 auto;
-    height: 70px;
+    height: 95px;
     -webkit-box-shadow: #1999d7 0 0 30px;
     -moz-box-shadow: #1999d7 0 0 30px;
-    -o-box-shadow: #1999d7 0 0 30px
+    -o-box-shadow: #1999d7 0 0 30px;
+    background: white;
 }
 
 .container {
@@ -406,5 +408,6 @@ input{
     bottom: 0;
     background: none;
     border-top: 1px solid rgb(153, 149, 149);
+    
     
 }

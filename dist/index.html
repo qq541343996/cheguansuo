@@ -8,10 +8,15 @@
     <script src="./build/tracking-min.js"></script>
     <script src="./build/data/face-min.js"></script>
     <script language="javascript" src="./LodopFuncs.js"></script>
+    <script src="./flashcanvas.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="./default.css">
+    <script src="./jquery-1.11.0.min.js"></script>
+	<script src="./jq-signature.js"></script>
     <title>交管智慧处理终端</title>
     <style>
         body {
-            background: url("./img/background.png") no-repeat #041623;
+            /* background: url("./img/background.png") no-repeat #041623; */
             background-size:100% 100%; 
             background-attachment: fixed;
             margin: 0;
@@ -32,24 +37,8 @@
     <div id="root" class="wrapper">
     </div>
     <script src="./index_bundle.js"></script>
-    <script>
-        function requestFullScreen(element) {
-            // 判断各种浏览器，找到正确的方法
-            var requestMethod = element.requestFullScreen || //W3C
-                element.webkitRequestFullScreen || //FireFox
-                element.mozRequestFullScreen || //Chrome等
-                element.msRequestFullScreen; //IE11
-            if (requestMethod) {
-                requestMethod.call(element);
-            } else if (typeof window.ActiveXObject !== "undefined") { //for Internet Explorer
-                var wscript = new ActiveXObject("WScript.Shell");
-                if (wscript !== null) {
-                    wscript.SendKeys("{F11}");
-                }
-            }
-        }
-        requestFullScreen(document.documentElement);
-    </script>
+    <div id="softkey" style="position: fixed; bottom: 0px; left: 0px; width: 100%;" ></div>
+    <script src="./SoftKey/vk_loader.js?vk_layout=CN%20CN&vk_skin=flat_gray" ></script>
 </body>
 
 </html>
