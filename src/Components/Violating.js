@@ -43,19 +43,30 @@ readCert1=()=> {
         message.success("识别成功");
         this.setState({
             name:ret.resultContent.partyName,
-            // gender:ret.resultContent.gender == 1?"男":"女",
-            // nation:ret.resultContent.nation,
-            // bornDay:ret.resultContent.bornDay,
             certNumber:ret.resultContent.certNumber,
-            // img1:ret.resultContent.identityPic
         },()=>{
             //发送身份证号
-            // HttpClientpost("http://39.106.29.113:6789",{"code":"86005","token":"0fa16a943ab6679ccd052814a6ada0d6","param":{"jszh":this.state.certNumber}}
-            // ).then((result) => {
-            //     console.log('result',result)
-            //     _that.setState({
-            //         data:result
-            //     })
+            // HttpClientpost("http://39.106.102.99/86005",{"jszh":"500230199408200451"})
+            // ).then((result1) => {
+            //     console.log('result1',result1)
+            //     
+                    //result1.map((item, index)=>{
+                        // HttpClientpost("http://39.106.102.99/86003",{hpzl:item.hpzl,hphm:item.hphm})
+                        // .then((result2)=>{
+                        //     console.log('result2',result2)
+                                // result2 = result2 === null ? [] : result2;
+                                // result2.map((item, index) => {
+                                //     item["key"] = index + 1;
+                                // })
+                        //     _that.setState({
+                        //         data:result2
+                        //     })
+                        // }).catch((err) => {
+                        //     console.log(err)
+                        // })
+                    //})
+                    
+
             // }).catch((err) => {
             //     console.log(err)
             // });
@@ -148,7 +159,7 @@ JStrToObj=(str)=>{
         this.setState({
             dealHandle: "table",
         },()=>{
-            console.log(this.state.carNumber2)
+            console.log("车牌号码",this.state.carNumber2)
         })
     }
 
@@ -279,7 +290,7 @@ camera=(record)=>{
            
         })
     }
-    //打印
+    //打印凭条
     myPrint=()=> {		       
 		this.CreatePrintPage();       
 		LODOP.PRINT();		       
@@ -300,8 +311,20 @@ camera=(record)=>{
         LODOP.ADD_PRINT_TEXT(170,10,300,10,"----------------------------------");
         LODOP.ADD_PRINT_TEXT(190,10,300,20,"终端号:00000027");
         LODOP.ADD_PRINT_TEXT(210,100,300,20,"此凭证不作报销依据");
-        LODOP.SET_PRINT_PAGESIZE(3,700,30,"")	       
-	}; 
+        LODOP.SET_PRINT_PAGESIZE(3,700,50,"")	       
+    }; 
+    //打印条形码/二维码
+    myPrint2=()=> {		       
+		this.CreatePrintPage2();       
+		LODOP.PRINT();		       
+    };
+    CreatePrintPage2=()=>{
+        LODOP=getLodop();
+        LODOP.ADD_PRINT_TEXT(0,100,100,25,"违章编号二维码");
+        LODOP.ADD_PRINT_BARCODE(30,80,120,120,"QRCode",564615657537186);
+        LODOP.ADD_PRINT_TEXT(200,80,300,20,"");
+        LODOP.SET_PRINT_PAGESIZE(3,700,50,"")	       
+    }
     //缴费
     onMoney=()=>{
         this.setState({
@@ -403,6 +426,7 @@ camera=(record)=>{
     }
     //打印条形码并且返回表单页
     backViolating(){
+        this.myPrint2()
         this.setState({
             dealHandle:"table",
             img1:"",
@@ -417,6 +441,12 @@ camera=(record)=>{
         this.setState({
             hpzlName:name,
             hpzl:data
+        })
+    }
+    //违法照片查询
+    wfpic=()=>{
+        this.setState({
+            dealHandle:"wfpic",
         })
     }
     seletHandle = () => {
@@ -437,10 +467,17 @@ camera=(record)=>{
             title: '违法地址',
             dataIndex: 'wfdz',
             key: 'wfdz',
-        }, {
+        },{
+            title: '违法照片',
+            dataIndex: 'pic',
+            key: 'pic',
+            render:(text, record)=>(
+                <span onClick={()=>this.wfpic()}><Tag color="blue">照片查询</Tag></span>
+            )
+        },{
             title: '记分',
-            dataIndex: 'score',
-            key: 'score',
+            dataIndex: 'wfjfs',
+            key: 'wfjfs',
         }, {
             title: '罚款金额',
             dataIndex: 'fkje',
@@ -460,21 +497,20 @@ camera=(record)=>{
             title: '操作',
             key: 'action',
             render: (text, record) => (
-              <span>
+              <span onClick={()=>this.dealHandle2(record)}>
               {parseInt(record.clbj)==1 ? <Tag color="blue">处理</Tag>:<Tag color="blue">交款</Tag>}
               </span>
             ),
           }];
 
         const data = [{
-            cljdsbh:"123435345",
             key: '1',
             wfnr: '闯红灯',
             hphm:'渝A123456',
             num: 32,
             wfsj: '2018/9/30 12:00:00',
             fkje:200,
-            score:'3',
+            wfjfs:'3',
             wfdz:'桃源路路口',
             clbj:'0'
         }, {
@@ -484,7 +520,7 @@ camera=(record)=>{
             num: 42,
             wfsj: '2018/9/30 12:00:00',
             fkje:300,
-            score:'3',
+            wfjfs:'3',
             wfdz:'直港大道',
             clbj:'1'
         }, {
@@ -494,7 +530,7 @@ camera=(record)=>{
             num: 52,
             wfsj: '2018/9/30 12:00:00',
             fkje:400,
-            score:'3',
+            wfjfs:'3',
             wfdz:'嘉华大桥',
             clbj:'1'
         }, {
@@ -504,7 +540,7 @@ camera=(record)=>{
             num: 65,
             wfsj: '2018/9/30 12:00:00',
             fkje:400,
-            score:'3',
+            wfjfs:'3',
             wfdz:'桃源路路口',
             clbj:'1'
         }];
@@ -535,11 +571,12 @@ camera=(record)=>{
             case "table":
                 child.push(<div key={1} className="re-face-card">
                     <Table columns={columns} dataSource={data} pagination={false} 
-                    onRow={(record) => {
-                        return {
-                          onClick: () => {this.dealHandle2(record)}// 点击行
-                        };
-                      }}/>
+                    //onRow={(record) => {
+                        //return {
+                          //onClick: () => {this.dealHandle2(record)}// 点击行
+                        //};
+                      //}}
+                    />
                       <Pagination defaultCurrent={1} defaultPageSize={5} total={5} style={{marginTop:'10px'}}/>
                 </div>);
                 break;
@@ -686,6 +723,13 @@ camera=(record)=>{
                         <p onClick={()=>{this.onCarNumber(-1)}}>退格</p>
                     </div>
                     <button onClick={()=>this.select()} style={{fontSize:"24px",marginTop:"20px"}}>确认</button>
+                </div>);
+                break;
+            case "wfpic":
+                child.push(<div key={1} className="re-face">
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"px" ,display:"flex"}}>
+                      违法照片
+                    </span>
                 </div>);
                 break;
             default:

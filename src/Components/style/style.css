@@ -127,4 +127,6 @@
     height: 250px;
     line-height: 200px;
 }
-
+.ant-tag-blue{
+    font-size: 14px;
+}
