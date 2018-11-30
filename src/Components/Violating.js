@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { message, Table, Divider, Tag, Pagination,Menu,Dropdown,Button,Icon } from 'antd';
 import { Link } from 'react-router-dom';
 import {HttpClient, HttpClientget, HttpClientpost} from '../util/AxiosUtils';
-
+import moment from 'moment';
 class Violating extends Component {
     constructor(props) {
         super(props);
@@ -12,9 +12,7 @@ class Violating extends Component {
             name:'',
             img1:'',
             takePhoto:true,
-            money:'',
             msg:'',
-            score:'',
             carNumber:"",
             disposDriveNumber:'5002320194984547234',
             serialNumber:'',
@@ -90,6 +88,7 @@ readCert2=(record)=> {
         _that.setState({
             img1:ret.resultContent.identityPic,
             disposName:ret.resultContent.partyName,
+            clrsfzh:ret.resultContent.certNumber,
         },()=>{
             document.getElementById("img1").onload=()=>{
                 var canvas = document.getElementById("myCanvas");
@@ -128,7 +127,10 @@ JStrToObj=(str)=>{
         // this.connect()
         if(record.clbj==1){
             this.setState({
-                dealHandle: "card2"
+                dealHandle: "card2",
+                wfjfs:record.wfjfs,
+                hphm:record.hphm,
+                fkje:record.fkje,
             }, () => {
                 this.time = setInterval(() => {
                     this.readCert2(record)                
@@ -138,9 +140,10 @@ JStrToObj=(str)=>{
         }else{
             this.setState({
                     dealHandle: "confirmInfo",
-                    score:record.score,
-                    carNumber:record.carNumber,
-                    money:record.money
+                    wfjfs:record.wfjfs,
+                    hphm:record.hphm,
+                    fkje:record.fkje,
+                   
                 })
         }
        
@@ -295,19 +298,22 @@ camera=(record)=>{
 		this.CreatePrintPage();       
 		LODOP.PRINT();		       
     };
-    CreatePrintPage=()=> {       
+    CreatePrintPage=()=> {      
+        const {name,hphm,fkje} = this.state;
+        const Time = new Date();
+        const fksj = moment(Time).format("YYYYMMDD hh:mm:ss")
         LODOP=getLodop();
 		LODOP.SET_PRINT_STYLE("FontSize",9);       
 		LODOP.ADD_PRINT_TEXT(0,100,100,25,"缴凭证据");       
 		LODOP.SET_PRINT_STYLEA(2,"FontName","隶书");       
 		LODOP.SET_PRINT_STYLEA(2,"FontSize",9);		       
 		LODOP.ADD_PRINT_TEXT(30,10,300,20,"处罚决定书编号：5002301940820451");       
-		LODOP.ADD_PRINT_TEXT(50,10,300,20,"当事人：陈龙");       
-        LODOP.ADD_PRINT_TEXT(70,10,300,20,"车牌号：渝A-123456");
+		LODOP.ADD_PRINT_TEXT(50,10,300,20,"当事人："+name);       
+        LODOP.ADD_PRINT_TEXT(70,10,300,20,"车牌号："+hphm);
         LODOP.ADD_PRINT_TEXT(90,10,300,10,"----------------------------------");
         LODOP.ADD_PRINT_TEXT(110,10,300,20,"缴款卡号：664684803486456");
-        LODOP.ADD_PRINT_TEXT(130,10,300,20,"缴款金额：1000000");
-        LODOP.ADD_PRINT_TEXT(150,10,300,20,"缴款时间：20181022 9:56:53");
+        LODOP.ADD_PRINT_TEXT(130,10,300,20,"缴款金额："+fkje);
+        LODOP.ADD_PRINT_TEXT(150,10,300,20,"缴款时间："+fksj);
         LODOP.ADD_PRINT_TEXT(170,10,300,10,"----------------------------------");
         LODOP.ADD_PRINT_TEXT(190,10,300,20,"终端号:00000027");
         LODOP.ADD_PRINT_TEXT(210,100,300,20,"此凭证不作报销依据");
@@ -322,7 +328,8 @@ camera=(record)=>{
         LODOP=getLodop();
         LODOP.ADD_PRINT_TEXT(0,100,100,25,"违章编号二维码");
         LODOP.ADD_PRINT_BARCODE(30,80,120,120,"QRCode",564615657537186);
-        LODOP.ADD_PRINT_TEXT(200,80,300,20,"");
+        LODOP.ADD_PRINT_TEXT(200,10,300,20,"");
+        LODOP.ADD_PRINT_TEXT(220,10,300,10,"");
         LODOP.SET_PRINT_PAGESIZE(3,700,50,"")	       
     }
     //缴费
@@ -627,7 +634,7 @@ camera=(record)=>{
                 break;
             case "payVio":
                 child.push(<div key={1} className="re-face-card">
-                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"50px",color:"white"  }}>完成缴费.</span>
+                    <span style={{ fontSize: "37px", fontWeight: 600, color: "#000000",marginBottom:"50px",color:"black"  }}>完成缴费.</span>
                     <button onClick={this.myPrint} style={{fontSize:"24px"}}>打印凭证</button>
                 </div>);
                 break;
@@ -637,8 +644,8 @@ camera=(record)=>{
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:"px",textAlign:"left"}}>
                         <p style={{marginTop:'5px',color:"black" }}>处理决定书编号：564615657537186</p>
                         <p style={{marginTop:'5px',color:"black" }}>当事人：{this.state.name}</p>
-                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.carNumber}</p>
-                        <p style={{marginTop:'5px',color:"black" }}>罚款金额（元）：{this.state.money}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.hphm}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>罚款金额（元）：{this.state.fkje}</p>
                         <p style={{marginTop:'5px',color:"black" }}>滞纳金（元）：0</p>
                     </span>
                     <button onClick={()=>this.onMoney()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
@@ -648,11 +655,11 @@ camera=(record)=>{
                 child.push(<div key={1} className="re-face-card">
                     <p style={{fontSize: "24px", fontWeight: 600, color: "#000000",marginTop:'5px',color:"black" }}>违法信息确认</p>
                     <span style={{ fontSize: "24px", fontWeight: 600, color: "#000000",marginBottom:"px",textAlign:"left"}}>
-                        <p style={{marginTop:'5px',color:"black" }}>处理人驾驶证号：{this.state.disposDriveNumber}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>处理人驾驶证号：{this.state.clrsfzh}</p>
                         <p style={{marginTop:'5px',color:"black" }}>处理人：{this.state.disposName}</p>
-                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.carNumber}</p>
-                        <p style={{marginTop:'5px',color:"black" }}>违章记分：{this.state.score}</p>
-                        <p style={{marginTop:'5px',color:"black" }}>罚款金额：{this.state.money}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>车牌号码：{this.state.hphm}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>违章记分：{this.state.wfjfs}</p>
+                        <p style={{marginTop:'5px',color:"black" }}>罚款金额：{this.state.fkje}</p>
                    </span>
                     <button onClick={()=>this.dispose()} style={{fontSize:"24px",marginTop:"20px"}}>确认信息</button>
                 </div>);
@@ -770,7 +777,9 @@ camera=(record)=>{
         // }).catch((err) => {
         //     console.log(err)
         // });
-        
+        const Time = new Date();
+        const fksj = moment(Time).format("YYYYMMDD hh:mm:ss")
+        console.log(fksj)
     }
     componentWillUnmount(){
         clearInterval(this.time)
